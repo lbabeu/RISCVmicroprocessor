@@ -1,5 +1,5 @@
 module CPU_top(output reg clk, output reg [31:0] PC, output wire [31:0] ALUout, output wire [31:0] rs1, output wire [31:0] rs2,
-output wire [31:0] instr, output wire PCsel, output wire RegWen, output wire BrUn, output wire Bsel, output wire Asel, output wire [4:0] AluOp, output wire WbSel,
+output wire [31:0] instr, output wire PCsel, output wire RegWen, output wire BrUn, output wire Bsel, output wire Asel, output wire [3:0] ALUop, output wire WbSel,
 output wire MemRW);
 
 reg [4:0] inrs1;
@@ -20,8 +20,8 @@ PC = 0; //start instructions at ROM index 4, use PC = 0 just to make sure any tr
 end
 always #2 clk = ~clk;
 
-Control_Unit cu (clk, instr, PCsel, RegWen, BrUn, BEq, BLT, Bsel, Asel, AluOp, WbSel, MemRW);
-ALU ALU (clk, 1, opA, opB, AluOp, ALUout);
+Control_Unit cu (clk, instr, PCsel, RegWen, BrUn, BEq, BLT, Bsel, Asel, ALUop, WbSel, MemRW);
+ALU ALU (clk, 1, opA, opB, ALUop, ALUout);
 RAM RAM (clk, 1, MemRW, 0, memaddr, datain,  ramout);
 RegFile RegFile (0, RegWen, clk, inrs1, inrs2, rd, datain, rs1, rs2);
 ROM ROM (clk, 1, PC, instr);
@@ -29,7 +29,7 @@ BranchComp BranchComp (BrUn, rs1, rs2, BEq, BLT);
 
 //program counter
 always @(posedge clk) begin
-	if(PCsel == 1) begin
+	if(PCsel == 1 && cyclecounter == 4) begin
 	//PCsel = 1 means branch taken
 	PC = ALUout;
 	cyclecounter = 4;
